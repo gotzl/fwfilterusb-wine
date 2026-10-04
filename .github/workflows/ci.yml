@@ -1,0 +1,40 @@
+name: ci
+
+# Static checks, driver build and a full wine integration test
+# (install the driver in a fresh prefix, run the SDK-mimicking client).
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          # wine64-tools provides winegcc, libwine-dev the Wine headers,
+          # mingw-w64 the PE cross compilers, wine64 the runtime for the
+          # integration test, shellcheck for the installer script.
+          sudo apt-get install -y \
+            wine64-tools libwine-dev libwine-dev:i386 wine64 \
+            gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 \
+            shellcheck
+
+      - name: Static checks (installer script)
+        run: |
+          bash -n setup_ftec_fwfilter.sh
+          shellcheck -S warning setup_ftec_fwfilter.sh
+
+      - name: Build and test (throwaway wine prefix)
+        run: make test

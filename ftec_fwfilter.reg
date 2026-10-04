@@ -1,0 +1,18 @@
+Windows Registry Editor Version 5.00
+
+; Default device PID 0020 (patched by setup_ftec_fwfilter.sh --pid).
+; RimType 0x15: rims with 9 RGB rev LEDs (patched by setup_ftec_fwfilter.sh --rim)
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB#VID_0EB7&PID_0020#001#6&12345678&0&000]
+"BaseAccessories"=dword:00000000
+"BaseType"=dword:00000001
+"FirmwareVersion"=dword:00000001
+"HardwareExtFlags"=dword:00000000
+"PedalsType"=dword:00000000
+"RimType"=dword:00000015
+"SystemConfig"=dword:0000001c
+"SystemReport"=hex:00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+  00,00,00,00,02,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+"WheelRotation"=dword:00000000
+"WheelType"=dword:00000011

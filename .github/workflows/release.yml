@@ -1,0 +1,51 @@
+name: release
+
+# Build the driver and publish a distributable package whenever a
+# release tag (e.g. v1.0.0) is pushed.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          # wine64-tools provides winegcc (builds both 32- and 64-bit),
+          # libwine-dev the Wine headers, mingw-w64 the PE cross compilers
+          # used by the Makefile's -b <triplet> flags.
+          sudo apt-get install -y \
+            wine64-tools libwine-dev libwine-dev:i386 \
+            gcc-mingw-w64-x86-64 gcc-mingw-w64-i686
+
+      - name: Build driver (x64 + i386)
+        run: make all
+
+      - name: Stage distributable package
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          DIST="fwfilterusb-${TAG}"
+          mkdir -p "${DIST}"
+           cp fwfilterusb-x64.sys fwfilterusb.sys \
+              setup_ftec_fwfilter.sh ftec_fwfilter.reg README.md COPYING \
+              "${DIST}/"
+          tar -czf "${DIST}.tar.gz" "${DIST}"
+          sha256sum "${DIST}.tar.gz" > "${DIST}.tar.gz.sha256"
+          tar -tzf "${DIST}.tar.gz"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            fwfilterusb-*.tar.gz
+            fwfilterusb-*.tar.gz.sha256
