@@ -50,21 +50,14 @@ For more options see `./setup_ftec_fwfilter.sh --help`.
 
 The driver is active on the next `wineboot` (i.e. next time the game is started).
 
-### RGB configuration (`RimType`)
+### Wheel configuration (`RimType`, `WheelType`)
 
-Different wheel-rim LED configurations need different `RimType` registry values.
-`--rim` alone switches `RimType` on an already-installed prefix (no
-reinstall, no driver copy):
+With the `hid_fanatec` module loaded, the wheel base reports its rim and wheel
+type through sysfs. The driver copies those values onto the hardware key when
+it starts and whenever the Fanatec SDK reloads its settings.
 
-```sh
-# 9 RGB LEDs (default, `RimType 0x15`):
-./setup_ftec_fwfilter.sh --proton <APPID> --rim 9rgb
-# Single RGB LED (`RimType 0x0F`):
-./setup_ftec_fwfilter.sh --proton <APPID> --rim single-rgb
-# 9 non-RGB LEDs (`RimType 0x14`):
-./setup_ftec_fwfilter.sh --proton <APPID> --rim 9mono
-```
-
+The SDK determins FullForce support by the `WheelType` registry hardware key.
+The rev-LED layout is driven by `RimType` on the wheel's registry hardware key.
 
 ---
 
@@ -72,16 +65,10 @@ reinstall, no driver copy):
 
 ```sh
 make test
-# expected tail:
-#   OK:   DeviceIoControl(0x226028) -> 1028 bytes
-#   OK:   DeviceIoControl(0x22602c) -> success, 0 bytes
-#   OK:   40-byte header zeroed
-#          registry key path = "SYSTEM\CurrentControlSet\Enum\USB#VID_0EB7&..."
-#   PASS: fwfilterusb.sys responded correctly
 ```
 
-`make test` builds everything, installs into a throwaway wine prefix and runs
-the SDK-mimicking client.
+It builds everything, installs into a throwaway wine prefix and runs
+the SDK-mimicking client (no wheel needed).
 
 In-game, watch for `fwfilterusb` and `reg` wine-debug output (`WINEDEBUG=+fwfilterusb,+reg,...`).
 

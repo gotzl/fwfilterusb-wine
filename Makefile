@@ -12,6 +12,10 @@
 #   make [all|x64|i386|clean] [WINEGCC=...] [WINEINC=...]
 #   make test [TEST_PID=0020]   # full check in a throwaway wine prefix
 
+SHELL := /bin/bash
+# Drop Wine's unconditional fsync/esync banner even with WINEDEBUG=-all.
+WINE_FILTER = 2> >(grep -v -F -e 'fsync: up and running.' -e 'esync: up and running.' >&2)
+
 WINEGCC ?= winegcc
 # Directory D such that D/wine/debug.h exists (eselect slot, Debian, ...).
 WINEINC ?= $(shell for d in /etc/eselect/wine/include /usr/include /usr/local/include; do \
@@ -57,12 +61,14 @@ $(TEST_I386): test/test_fwfilterusb.c
 test: all test-clients
 	WINEPREFIX="$$(mktemp -d)"; trap 'rm -rf "$$WINEPREFIX"' EXIT; \
 	export WINEPREFIX; \
-	wine wineboot -u && \
+	export WINEDEBUG="$${WINEDEBUG:--all}"; \
+	wine wineboot -u $(WINE_FILTER) && \
 	./setup_ftec_fwfilter.sh --pid $(TEST_PID) && \
 	(wineserver -k || true) && \
-	wine wineboot && sleep 5 && \
-	wine $(TEST_X64) | tee test/test.log; \
-	grep -q "PASS: fwfilterusb.sys responded correctly" test/test.log
+	wine wineboot $(WINE_FILTER) && sleep 5 && \
+	wine $(TEST_X64) $(TEST_PID) $(WINE_FILTER) | tee test/test.log; \
+	grep -q "PASS: fwfilterusb.sys responded correctly" test/test.log && \
+	grep -q "PASS: RimType sysfs sync works" test/test.log
 
 x64: $(X64_OUT)
 
